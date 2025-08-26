@@ -13,6 +13,10 @@ exports.createCandidate = async (req, res) => {
       return res.status(400).json({ error: "Candidate already exists" });
     }
 
+    if (req.file) {
+      req.body.image_path = req.file.path; // e.g., 'uploads/image-123456.jpg'
+    }
+
     const candidate = await Candidate.create(req.body);
     res.status(201).json({
       message: "Candidate created successfully",
@@ -62,6 +66,9 @@ exports.getCandidateById = async (req, res) => {
 exports.updateCandidate = async (req, res) => {
   try {
     const { id } = req.params;
+    if (req.file) {
+      req.body.image_path = req.file.path; // Update image path if new file is uploaded
+    }
     const [updated] = await Candidate.update(req.body, {
       where: { id },
     });
