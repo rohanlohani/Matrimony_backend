@@ -11,7 +11,7 @@ app.use(cors());
 app.use(express.json());
 
 app.use("/api/auth", adminRoutes);
-app.use("/api/candidate", candidateRoute);
+app.use("/api/candidates", candidateRoute);
 
 // app.get("/", (req, res) => {
 //   res.send("Server is running!");

@@ -58,8 +58,8 @@ const Candidate = sequelize.define(
     state: { type: DataTypes.STRING(50), allowNull: false },
     district: { type: DataTypes.STRING(50), allowNull: false },
     pin_code: { type: DataTypes.STRING(10), allowNull: false },
-    phone: { type: DataTypes.STRING(20), allowNull: false },
-    contact_no: { type: DataTypes.STRING(20), allowNull: false },
+    phone: { type: DataTypes.STRING(20), allowNull: false, unique: true },
+    contact_no: { type: DataTypes.STRING(20), allowNull: false, unique: true },
     email: { type: DataTypes.STRING(100), allowNull: false },
 
     // Physical Details

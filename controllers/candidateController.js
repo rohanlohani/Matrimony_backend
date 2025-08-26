@@ -3,6 +3,16 @@ const Candidate = require("../models/candidateModel");
 // Create a new candidate
 exports.createCandidate = async (req, res) => {
   try {
+    const { name, dob, phone } = req.body;
+
+    // Check if candidate already exists
+    const existingCandidate = await Candidate.findOne({
+      where: { name, dob, phone },
+    });
+    if (existingCandidate) {
+      return res.status(400).json({ error: "Candidate already exists" });
+    }
+
     const candidate = await Candidate.create(req.body);
     res.status(201).json({
       message: "Candidate created successfully",
