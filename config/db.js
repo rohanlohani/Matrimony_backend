@@ -1,4 +1,4 @@
-const Sequelize = require("sequelize");
+const { Sequelize } = require("sequelize");
 require("dotenv").config();
 
 const sequelize = new Sequelize(
@@ -20,5 +20,6 @@ const connectDB = async () => {
     console.error("Database connection failed: ", err);
   }
 };
+console.log("DB export:", sequelize instanceof Sequelize);
 
 module.exports = { connectDB, sequelize };
