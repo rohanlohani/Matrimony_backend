@@ -1,5 +1,6 @@
 const Candidate = require("../models/candidateModel");
 const { Op } = require("sequelize");
+const nodemailer = require("nodemailer");
 
 // Build absolute URL for image_path
 function buildImageUrl(req, imagePath) {
@@ -261,5 +262,106 @@ exports.deleteCandidate = async (req, res) => {
     res
       .status(500)
       .json({ error: "Failed to delete candidate", details: error.message });
+  }
+};
+
+// Send connection request email to a candidate
+exports.sendConnectionRequest = async (req, res) => {
+  try {
+    const { id } = req.params; // candidate id to notify
+    const { senderName, senderEmail, message } = req.body;
+
+    if (!senderName || !senderEmail) {
+      return res.status(400).json({ error: "senderName and senderEmail are required" });
+    }
+
+    const candidate = await Candidate.findByPk(id);
+    if (!candidate) {
+      return res.status(404).json({ error: "Candidate not found" });
+    }
+
+    if (!candidate.email) {
+      return res.status(400).json({ error: "Candidate does not have a valid email" });
+    }
+
+    // Validate SMTP configuration
+    const requiredEnv = ["SMTP_HOST", "SMTP_USER", "SMTP_PASS"];
+    const missing = requiredEnv.filter((k) => !process.env[k] || String(process.env[k]).trim() === "");
+    if (missing.length > 0) {
+      return res.status(500).json({
+        error: "SMTP configuration missing",
+        details: `Set these env vars: ${missing.join(", ")}`,
+      });
+    }
+
+    // Configure transporter from environment variables
+    const smtpPort = Number(process.env.SMTP_PORT || 587);
+    const smtpSecure = process.env.SMTP_SECURE
+      ? String(process.env.SMTP_SECURE).toLowerCase() === "true" || smtpPort === 465
+      : smtpPort === 465;
+
+    const transporter = nodemailer.createTransport({
+      host: process.env.SMTP_HOST,
+      port: smtpPort,
+      secure: smtpSecure,
+      auth: {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS,
+      },
+    });
+
+    // Verify transporter to surface auth/network errors early
+    try {
+      await transporter.verify();
+    } catch (smtpError) {
+      console.error("SMTP verification failed:", smtpError);
+      return res.status(500).json({
+        error: "SMTP connection failed",
+        details: smtpError?.message || "Unable to connect to SMTP server",
+      });
+    }
+
+    const fromEmail = process.env.FROM_EMAIL || process.env.SMTP_USER;
+    const siteName = process.env.SITE_NAME || "Agarwal Samaj Matrimony";
+
+    const mailSubject = `New connection request on ${siteName}`;
+    const mailText = `Hello ${candidate.name},\n\n` +
+      `You have a new connection request on ${siteName}.\n\n` +
+      `Sender Details:\n` +
+      `Name: ${senderName}\n` +
+      `Email: ${senderEmail}\n` +
+      `${message ? `\nMessage:\n${message}\n\n` : ""}` +
+      `You can reply directly to this email to contact the sender.\n\n` +
+      `Regards,\n${siteName}`;
+
+    const mailHtml = `
+      <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #111827;">
+        <h2 style="margin: 0 0 12px 0;">New connection request</h2>
+        <p>You have received a new connection request on <strong>${siteName}</strong>.</p>
+        <div style="background:#F3F4F6; padding:12px 16px; border-radius:8px;">
+          <p style="margin:4px 0;"><strong>Candidate:</strong> ${candidate.name}</p>
+          <p style="margin:4px 0;"><strong>Sender Name:</strong> ${senderName}</p>
+          <p style="margin:4px 0;"><strong>Sender Email:</strong> ${senderEmail}</p>
+          ${message ? `<p style="margin:12px 0 0 0;"><strong>Message:</strong><br/>${String(message).replace(/\n/g, '<br/>')}</p>` : ""}
+        </div>
+        <p style="margin-top:16px;">You can reply directly to this email to contact the sender.</p>
+        <p style="margin-top:16px; color:#6B7280;">— ${siteName}</p>
+      </div>
+    `;
+
+    await transporter.sendMail({
+      from: fromEmail,
+      to: candidate.email,
+      
+      replyTo: senderEmail,
+      subject: mailSubject,
+      text: mailText,
+      html: mailHtml,
+    });
+
+    return res.status(200).json({ message: "Connection request email sent" });
+  } catch (error) {
+    console.error("Failed to send connection request email", error);
+    return res.status(500).json({ error: "Failed to send connection request email", details: error.message });
   }
 };

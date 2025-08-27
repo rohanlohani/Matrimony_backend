@@ -18,6 +18,7 @@ router.post(
 );
 router.get("/", candidateController.getAllCandidates);
 router.get("/:id", candidateController.getCandidateById);
+router.post("/:id/connect", candidateController.sendConnectionRequest);
 router.put(
   "/:id",
   upload.fields([

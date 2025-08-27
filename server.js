@@ -2,6 +2,7 @@ const express = require("express");
 const cors = require("cors");
 const path = require("path");
 const fs = require("fs");
+const nodemailer=require('nodemailer');
 const { connectDB, sequelize } = require("./config/db");
 require("dotenv").config();
 const adminRoutes = require("./routes/authRoute");
