@@ -4,17 +4,21 @@ const { body, validationResult } = require("express-validator");
 exports.validateCandidate = [
   // Personal Info
   body("name").notEmpty().withMessage("Name is required"),
-  body("dob").isDate().withMessage("DOB must be a valid date"),
+  body("dob").notEmpty().withMessage("DOB is required"),
   body("birth_place").notEmpty().withMessage("Birth place is required"),
   body("candidate_gender").notEmpty().withMessage("Gender is required"),
   body("manglik").notEmpty().withMessage("Manglik is required"),
   body("gotra").notEmpty().withMessage("Gotra is required"),
   body("maternal_gotra").notEmpty().withMessage("Maternal Gotra is required"),
 
-  // Contact
-  body("email").isEmail().withMessage("Invalid email"),
-  body("phone").notEmpty().withMessage("Phone number is required"),
+  // Family Info
+  body("father_name").notEmpty().withMessage("Father's name is required"),
+  body("father_mobile").notEmpty().withMessage("Father's mobile is required"),
+
+  // Address & Contact
+  body("state").notEmpty().withMessage("State is required"),
   body("contact_no").notEmpty().withMessage("Contact number is required"),
+  body("email").isEmail().withMessage("Invalid email"),
 
   // Physical Details
   body("height").notEmpty().withMessage("Height is required"),
@@ -33,7 +37,7 @@ exports.validateCandidate = [
   (req, res, next) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
+      return res.status(400).json(errors.array());
     }
     next();
   },
@@ -43,7 +47,7 @@ exports.validateCandidate = [
 exports.validateCandidateUpdate = [
   // Personal Info
   body("name").optional().notEmpty().withMessage("Name cannot be empty"),
-  body("dob").optional().isDate().withMessage("DOB must be a valid date"),
+  body("dob").optional().notEmpty().withMessage("DOB cannot be empty"),
   body("birth_place")
     .optional()
     .notEmpty()
@@ -59,16 +63,17 @@ exports.validateCandidateUpdate = [
     .notEmpty()
     .withMessage("Maternal Gotra cannot be empty"),
 
-  // Contact
-  body("email").optional().isEmail().withMessage("Invalid email"),
-  body("phone")
-    .optional()
-    .notEmpty()
-    .withMessage("Phone number cannot be empty"),
+  // Family Info
+  body("father_name").optional().notEmpty().withMessage("Father's name cannot be empty"),
+  body("father_mobile").optional().notEmpty().withMessage("Father's mobile cannot be empty"),
+
+  // Address & Contact
+  body("state").optional().notEmpty().withMessage("State cannot be empty"),
   body("contact_no")
     .optional()
     .notEmpty()
     .withMessage("Contact number cannot be empty"),
+  body("email").optional().isEmail().withMessage("Invalid email"),
 
   // Physical Details
   body("height").optional().notEmpty().withMessage("Height cannot be empty"),
@@ -105,7 +110,7 @@ exports.validateCandidateUpdate = [
   (req, res, next) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
+      return res.status(400).json(errors.array());
     }
     next();
   },

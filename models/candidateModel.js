@@ -16,7 +16,7 @@ const Candidate = sequelize.define(
       allowNull: false,
     },
     dob: {
-      type: DataTypes.DATEONLY,
+      type: DataTypes.STRING(100),
       allowNull: false,
     },
     birth_place: {
@@ -43,23 +43,23 @@ const Candidate = sequelize.define(
     // Family Info
     father_name: { type: DataTypes.STRING(100), allowNull: false },
     father_mobile: { type: DataTypes.STRING(20), allowNull: false },
-    father_occupation: { type: DataTypes.STRING(100), allowNull: false },
-    father_annual_income: { type: DataTypes.INTEGER, allowNull: false },
-    mother_name: { type: DataTypes.STRING(100), allowNull: false },
-    mother_occupation: { type: DataTypes.STRING(100), allowNull: false },
-    grandfather: { type: DataTypes.STRING(100), allowNull: false },
-    native_place: { type: DataTypes.STRING(100), allowNull: false },
-    nationality: { type: DataTypes.STRING(50), allowNull: false },
-    status_of_family: { type: DataTypes.STRING(50), allowNull: false },
+    father_occupation: { type: DataTypes.STRING(100), allowNull: true },
+    father_annual_income: { type: DataTypes.INTEGER, allowNull: true },
+    mother_name: { type: DataTypes.STRING(100), allowNull: true },
+    mother_occupation: { type: DataTypes.STRING(100), allowNull: true },
+    grandfather: { type: DataTypes.STRING(100), allowNull: true },
+    native_place: { type: DataTypes.STRING(100), allowNull: true },
+    nationality: { type: DataTypes.STRING(50), allowNull: true },
+    status_of_family: { type: DataTypes.STRING(50), allowNull: true },
 
     // Address & Contact
-    address: { type: DataTypes.STRING(255), allowNull: false },
-    country: { type: DataTypes.STRING(50), allowNull: false },
+    address: { type: DataTypes.STRING(255), allowNull: true },
+    country: { type: DataTypes.STRING(50), allowNull: true, defaultValue: "India" },
     state: { type: DataTypes.STRING(50), allowNull: false },
-    district: { type: DataTypes.STRING(50), allowNull: false },
-    pin_code: { type: DataTypes.STRING(10), allowNull: false },
-    phone: { type: DataTypes.STRING(20), allowNull: false, unique: true },
-    contact_no: { type: DataTypes.STRING(20), allowNull: false, unique: true },
+    district: { type: DataTypes.STRING(50), allowNull: true },
+    pin_code: { type: DataTypes.STRING(10), allowNull: true },
+    phone: { type: DataTypes.STRING(20), allowNull: true },
+    contact_no: { type: DataTypes.STRING(20), allowNull: false },
     email: { type: DataTypes.STRING(100), allowNull: false },
 
     // Physical Details
@@ -69,34 +69,34 @@ const Candidate = sequelize.define(
     blood_group: { type: DataTypes.STRING(10), allowNull: false },
 
     // Education & Profession
-    education_detail: { type: DataTypes.STRING(100), allowNull: false },
+    education_detail: { type: DataTypes.STRING(100), allowNull: true },
     education: { type: DataTypes.STRING(100), allowNull: false },
-    hobby: { type: DataTypes.STRING(100), allowNull: false },
+    hobby: { type: DataTypes.STRING(100), allowNull: true },
     occupation: { type: DataTypes.STRING(100), allowNull: false },
-    designation: { type: DataTypes.STRING(100), allowNull: false },
-    annual_income: { type: DataTypes.INTEGER, allowNull: false },
-    company_name: { type: DataTypes.STRING(100), allowNull: false },
-    company_city: { type: DataTypes.STRING(100), allowNull: false },
+    designation: { type: DataTypes.STRING(100), allowNull: true },
+    annual_income: { type: DataTypes.INTEGER, allowNull: true },
+    company_name: { type: DataTypes.STRING(100), allowNull: true },
+    company_city: { type: DataTypes.STRING(100), allowNull: true },
 
     // Siblings Info
     no_unmarried_brother: {
       type: DataTypes.INTEGER,
-      allowNull: false,
+      allowNull: true,
       defaultValue: 0,
     },
     no_unmarried_sister: {
       type: DataTypes.INTEGER,
-      allowNull: false,
+      allowNull: true,
       defaultValue: 0,
     },
     no_married_brother: {
       type: DataTypes.INTEGER,
-      allowNull: false,
+      allowNull: true,
       defaultValue: 0,
     },
     no_married_sister: {
       type: DataTypes.INTEGER,
-      allowNull: false,
+      allowNull: true,
       defaultValue: 0,
     },
 
@@ -110,15 +110,15 @@ const Candidate = sequelize.define(
     relative_company_address: { type: DataTypes.STRING(255), allowNull: true },
 
     // Extra
-    kundali_milana: { type: DataTypes.STRING(10) },
+    kundali_milana: { type: DataTypes.STRING(10), allowNull: true },
     about_me: { type: DataTypes.TEXT, allowNull: false },
-    image_path: { type: DataTypes.STRING(255), allowNull: false },
+    image_path: { type: DataTypes.STRING(255), allowNull: true },
 
     // Subscription
     subscription: {
       type: DataTypes.BOOLEAN,
       allowNull: false,
-      defaultValue: 0,
+      defaultValue: false,
     },
   },
   {
