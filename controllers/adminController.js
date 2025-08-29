@@ -60,6 +60,7 @@ exports.signIn = async (req, res) => {
     return res.json({
       message: "Login successful",
       token,
+      role:user.role
     });
   } catch (err) {
     console.error(err);
