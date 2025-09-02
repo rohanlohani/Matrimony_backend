@@ -16,6 +16,7 @@ router.post(
   validateCandidate,
   candidateController.createCandidate
 );
+
 router.get("/", candidateController.getAllCandidates);
 router.get("/:id", candidateController.getCandidateById);
 router.post("/:id/connect", candidateController.sendConnectionRequest);
