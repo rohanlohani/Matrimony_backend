@@ -124,3 +124,51 @@ exports.getPendingListings = async (req, res) => {
     res.status(500).json({ error: "Failed to get pending listings" });
   }
 };
+
+// Update a listing by ID
+exports.updateListing = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const data = req.body;
+
+    // Optionally handle photos update (serialize if files uploaded)
+    if (req.files && req.files.photos) {
+      const filenames = req.files.photos.map(f => f.filename);
+      data.photos = filenames.join(",");
+    }
+
+    const [updated] = await Classified.update(data, { where: { id } });
+    if (!updated) return res.status(404).json({ error: "Listing not found" });
+
+    const updatedListing = await Classified.findByPk(id);
+    res.json({ message: "Listing updated", listing: updatedListing });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to update listing" });
+  }
+};
+
+// Delete a listing by ID
+exports.deleteListing = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const deleted = await Classified.destroy({ where: { id } });
+    if (!deleted) return res.status(404).json({ error: "Listing not found" });
+
+    res.json({ message: "Listing deleted successfully" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to delete listing" });
+  }
+};
+
+// Fetch all listings (optionally with filters)
+exports.fetchAllListings = async (req, res) => {
+  try {
+    const listings = await Classified.findAll();
+    res.json(listings);
+  } catch (err) {
+    res.status(500).json({ error: "Failed to fetch listings" });
+  }
+};
+

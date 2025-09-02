@@ -22,3 +22,16 @@ router.put("/:id/approve", authenticateAdmin, classifiedController.approveListin
 router.put("/:id/disapprove", authenticateAdmin, classifiedController.disapproveListing);
 
 module.exports = router;
+
+// Route to update listing (allow photo uploads)
+router.put(
+  "/:id",
+  upload.fields([{ name: "photos", maxCount: 5 }]),
+  classifiedController.updateListing
+);
+
+// Route to delete listing by id
+router.delete("/:id", classifiedController.deleteListing);
+
+// Route to fetch all listings
+router.get("/all", classifiedController.fetchAllListings);
