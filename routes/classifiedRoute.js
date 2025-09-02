@@ -14,14 +14,13 @@ router.post(
 );
 router.get("/status/:contact", classifiedController.getStatus);
 router.get("/search", classifiedController.searchListings);
+router.get("/all", classifiedController.fetchAllListings);                // Route to fetch all listings
 router.get("/:id", classifiedController.getListingById);
 
 // Admin API (protected)
 router.get("/pending", authenticateAdmin, classifiedController.getPendingListings);
 router.put("/:id/approve", authenticateAdmin, classifiedController.approveListing);
 router.put("/:id/disapprove", authenticateAdmin, classifiedController.disapproveListing);
-
-module.exports = router;
 
 // Route to update listing (allow photo uploads)
 router.put(
@@ -30,8 +29,8 @@ router.put(
   classifiedController.updateListing
 );
 
-// Route to delete listing by id
-router.delete("/:id", classifiedController.deleteListing);
+router.delete("/:id", classifiedController.deleteListing);            // Route to delete listing by id
 
-// Route to fetch all listings
-router.get("/all", classifiedController.fetchAllListings);
+
+module.exports = router;
+
