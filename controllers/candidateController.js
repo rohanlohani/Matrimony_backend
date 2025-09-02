@@ -3,7 +3,7 @@ const { Op } = require("sequelize"); // <-- Added: Sequelize operators for flexi
 const nodemailer = require("nodemailer"); // <-- Added: Email sending
 const candidateInfoConvert = require("../utils/candidateInfoConvert"); // <-- Added: Utility to normalize candidate data
 const { emailText, mailHtml } = require("../utils/email"); // <-- Added: Email templates
-const { buildImageUrl, handleProfilePhoto } = require("../utils/image")
+const { buildImageUrl, handleProfilePhoto } = require("../utils/image");
 
 exports.createCandidate = async (req, res) => {
   try {
@@ -15,11 +15,11 @@ exports.createCandidate = async (req, res) => {
         [Op.or]: [
           { email: candidateData.email },
           { contact_no: candidateData.contact_no },
-          { 
+          {
             name: candidateData.name, // <-- Added: From old code
-            dob: candidateData.dob, 
-            phone: candidateData.phone 
-          }
+            dob: candidateData.dob,
+            phone: candidateData.phone,
+          },
         ],
       },
     });
@@ -28,7 +28,9 @@ exports.createCandidate = async (req, res) => {
       // Update existing instead of error (new behavior)
       handleProfilePhoto(req, candidateData, existingCandidate);
 
-      await Candidate.update(candidateData, { where: { id: existingCandidate.id } });
+      await Candidate.update(candidateData, {
+        where: { id: existingCandidate.id },
+      });
       const updatedCandidate = await Candidate.findByPk(existingCandidate.id);
 
       const response = updatedCandidate.toJSON();
@@ -58,60 +60,94 @@ exports.createCandidate = async (req, res) => {
 
     // <-- New: Specific Sequelize error handling
     if (error.name === "SequelizeValidationError") {
-      return res.status(400).json(error.errors.map((err) => ({
-        path: err.path, msg: err.message, value: err.value
-      })));
+      return res.status(400).json(
+        error.errors.map((err) => ({
+          path: err.path,
+          msg: err.message,
+          value: err.value,
+        }))
+      );
     }
 
     if (error.name === "SequelizeUniqueConstraintError") {
-      return res.status(400).json({ error: "A candidate with this information already exists" });
+      return res
+        .status(400)
+        .json({ error: "A candidate with this information already exists" });
     }
 
-    res.status(500).json({ error: "Failed to create candidate", details: error.message });
+    res
+      .status(500)
+      .json({ error: "Failed to create candidate", details: error.message });
   }
 };
 
 exports.getAllCandidates = async (req, res) => {
   try {
     const candidates = await Candidate.findAll();
-    const response = candidates.map(c => ({
+    console.log("candidates: ", candidates);
+    const response = candidates.map((c) => ({
       ...c.toJSON(),
       image_path: buildImageUrl(req, c.image_path), // <-- Added: absolute URL for images
     }));
     res.status(200).json(response);
   } catch (error) {
-    res.status(500).json({ error: "Failed to fetch candidates", details: error.message });
+    res
+      .status(500)
+      .json({ error: "Failed to fetch candidates", details: error.message });
   }
 };
 
 exports.getCandidateById = async (req, res) => {
   try {
     const candidate = await Candidate.findByPk(req.params.id);
-    if (!candidate) return res.status(404).json({ error: "Candidate not found" });
+    if (!candidate)
+      return res.status(404).json({ error: "Candidate not found" });
 
     const response = candidate.toJSON();
     response.image_path = buildImageUrl(req, response.image_path); // <-- Added
     res.status(200).json(response);
   } catch (error) {
-    res.status(500).json({ error: "Failed to fetch candidate", details: error.message });
+    res
+      .status(500)
+      .json({ error: "Failed to fetch candidate", details: error.message });
   }
 };
 
 exports.updateCandidate = async (req, res) => {
   try {
     let data = req.body;
-    data = handleProfilePhoto(req, data); // <-- Updated logic
+    const candidateId = req.params.id || data.id;
 
-    const [updated] = await Candidate.update(data, { where: { id: req.params.id } });
-    if (!updated) return res.status(404).json({ error: "Candidate not found or no changes made" });
+    const candidate = await Candidate.findByPk(candidateId);
+    if (!candidate) {
+      return res.status(404).json({ error: "Candidate not found" });
+    }
 
-    const updatedCandidate = await Candidate.findByPk(req.params.id);
+    data = handleProfilePhoto(req, data);
+
+    if (req.params.id && data.id) delete data.id;
+
+    console.log("Update payload:", data);
+
+    await Candidate.update(data, {
+      where: { id: candidateId },
+    });
+
+    const updatedCandidate = await Candidate.findByPk(candidateId);
     const response = updatedCandidate.toJSON();
-    response.image_path = buildImageUrl(req, response.image_path); // <-- Added
 
-    res.status(200).json({ message: "Candidate updated successfully", candidate: response });
+    response.image_path = buildImageUrl(req, response.image_path);
+
+    res.status(200).json({
+      message: "Candidate updated successfully",
+      candidate: response,
+    });
   } catch (error) {
-    res.status(500).json({ error: "Failed to update candidate", details: error.message });
+    console.error("Error updating candidate:", error);
+    res.status(500).json({
+      error: "Failed to update candidate",
+      details: error.message,
+    });
   }
 };
 
@@ -122,10 +158,11 @@ exports.deleteCandidate = async (req, res) => {
 
     res.status(200).json({ message: "Candidate deleted successfully" });
   } catch (error) {
-    res.status(500).json({ error: "Failed to delete candidate", details: error.message });
+    res
+      .status(500)
+      .json({ error: "Failed to delete candidate", details: error.message });
   }
 };
-
 
 exports.sendConnectionRequest = async (req, res) => {
   try {
@@ -133,16 +170,22 @@ exports.sendConnectionRequest = async (req, res) => {
     const { senderName, senderEmail } = req.body;
 
     if (!senderName || !senderEmail)
-      return res.status(400).json({ error: "senderName and senderEmail are required" });
+      return res
+        .status(400)
+        .json({ error: "senderName and senderEmail are required" });
 
     const candidate = await Candidate.findByPk(id);
-    if (!candidate) return res.status(404).json({ error: "Candidate not found" });
-    if (!candidate.email) return res.status(400).json({ error: "Candidate has no email" });
+    if (!candidate)
+      return res.status(404).json({ error: "Candidate not found" });
+    if (!candidate.email)
+      return res.status(400).json({ error: "Candidate has no email" });
 
     const transporter = nodemailer.createTransport({
       host: process.env.SMTP_HOST,
       port: Number(process.env.SMTP_PORT || 587),
-      secure: process.env.SMTP_SECURE === "true" || Number(process.env.SMTP_PORT) === 465,
+      secure:
+        process.env.SMTP_SECURE === "true" ||
+        Number(process.env.SMTP_PORT) === 465,
       auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
     });
 
@@ -150,13 +193,18 @@ exports.sendConnectionRequest = async (req, res) => {
       from: process.env.FROM_EMAIL || process.env.SMTP_USER,
       to: candidate.email,
       replyTo: senderEmail,
-      subject: `New connection request on ${process.env.SITE_NAME || "Agarwal Samaj Matrimony"}`,
+      subject: `New connection request on ${
+        process.env.SITE_NAME || "Agarwal Samaj Matrimony"
+      }`,
       text: emailText(candidate),
       html: mailHtml(candidate),
     });
 
     res.status(200).json({ message: "Connection request email sent" });
   } catch (error) {
-    res.status(500).json({ error: "Failed to send connection request email", details: error.message });
+    res.status(500).json({
+      error: "Failed to send connection request email",
+      details: error.message,
+    });
   }
 };
