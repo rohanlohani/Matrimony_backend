@@ -5,7 +5,7 @@ const { Op } = require("sequelize");
 const serializePhotos = (files) => {
   if (!files) return null;
   // Assume photos uploaded under 'photos' field
-  const filenames = files.photos ? files.photos.map(f => f.filename) : [];
+  const filenames = files.photos ? files.photos.map((f) => f.filename) : [];
   return filenames.join(",");
 };
 
@@ -25,7 +25,9 @@ exports.registerListing = async (req, res) => {
       where: { [Op.or]: [{ email: data.email }, { phone: data.phone }] },
     });
     if (existing) {
-      return res.status(400).json({ error: "Email or Phone already registered" });
+      return res
+        .status(400)
+        .json({ error: "Email or Phone already registered" });
     }
 
     const listing = await Classified.create(data);
@@ -83,13 +85,19 @@ exports.approveListing = async (req, res) => {
     const { id } = req.params;
     const adminId = req.user.id; // assuming authenticated admin user id in req.user
 
-    const [updated] = await Classified.update({
-      status: "approved",
-      approval_by: adminId,
-      approval_date: new Date(),
-    }, { where: { id, status: "pending" } });
+    const [updated] = await Classified.update(
+      {
+        status: "approved",
+        approval_by: adminId,
+        approval_date: new Date(),
+      },
+      { where: { id, status: "pending" } }
+    );
 
-    if (!updated) return res.status(404).json({ error: "Listing not found or not pending" });
+    if (!updated)
+      return res
+        .status(404)
+        .json({ error: "Listing not found or not pending" });
     res.json({ message: "Listing approved" });
   } catch (err) {
     res.status(500).json({ error: "Failed to approve listing" });
@@ -102,13 +110,19 @@ exports.disapproveListing = async (req, res) => {
     const { id } = req.params;
     const adminId = req.user.id;
 
-    const [updated] = await Classified.update({
-      status: "disapproved",
-      approval_by: adminId,
-      approval_date: new Date(),
-    }, { where: { id, status: "pending" } });
+    const [updated] = await Classified.update(
+      {
+        status: "disapproved",
+        approval_by: adminId,
+        approval_date: new Date(),
+      },
+      { where: { id, status: "pending" } }
+    );
 
-    if (!updated) return res.status(404).json({ error: "Listing not found or not pending" });
+    if (!updated)
+      return res
+        .status(404)
+        .json({ error: "Listing not found or not pending" });
     res.json({ message: "Listing disapproved" });
   } catch (err) {
     res.status(500).json({ error: "Failed to disapprove listing" });
@@ -130,18 +144,24 @@ exports.updateListing = async (req, res) => {
   try {
     const { id } = req.params;
     const data = req.body;
-
+    // Check if the listing exists first
+    const listing = await Classified.findByPk(id);
+    if (!listing) {
+      return res.status(404).json({ error: "Listing not found" });
+    }
     // Optionally handle photos update (serialize if files uploaded)
     if (req.files && req.files.photos) {
-      const filenames = req.files.photos.map(f => f.filename);
+      const filenames = req.files.photos.map((f) => f.filename);
       data.photos = filenames.join(",");
     }
-
-    const [updated] = await Classified.update(data, { where: { id } });
-    if (!updated) return res.status(404).json({ error: "Listing not found" });
-
+    // Update the listing (Sequelize returns number of affected rows)
+    await Classified.update(data, { where: { id } });
+    // Fetch the latest listing
     const updatedListing = await Classified.findByPk(id);
-    res.json({ message: "Listing updated", listing: updatedListing });
+    res.json({
+      message: "Listing updated successfully",
+      listing: updatedListing,
+    });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Failed to update listing" });
@@ -171,4 +191,3 @@ exports.fetchAllListings = async (req, res) => {
     res.status(500).json({ error: "Failed to fetch listings" });
   }
 };
-
