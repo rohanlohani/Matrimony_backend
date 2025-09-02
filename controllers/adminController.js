@@ -12,6 +12,12 @@ exports.signUp = async (req, res) => {
       return res.status(400).json({ error: "Email already registered" });
     }
 
+    // if username is taken
+    const usernameTaken = await AdminUser.findOne({ where: { username } });
+    if (usernameTaken) {
+      return res.status(400).json({ error: "Username already taken." });
+    }
+
     // hash password
     const saltRounds = 10;
     const password_hash = await bcrypt.hash(password, saltRounds);
@@ -60,7 +66,7 @@ exports.signIn = async (req, res) => {
     return res.json({
       message: "Login successful",
       token,
-      role:user.role
+      role: user.role,
     });
   } catch (err) {
     console.error(err);
