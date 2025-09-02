@@ -8,29 +8,30 @@ const authenticateAdmin = require("../middlewares/authenticateAdmin");
 // User API
 router.post(
   "/register",
-  upload.fields([{ name: 'photos', maxCount: 5 }]),
+  upload.fields([{ name: "photos", maxCount: 5 }]),
   validateClassified,
   classifiedController.registerListing
 );
+
 router.get("/status/:contact", classifiedController.getStatus);
 router.get("/search", classifiedController.searchListings);
-router.get("/all", classifiedController.fetchAllListings);                // Route to fetch all listings
-router.get("/:id", classifiedController.getListingById);
+
+router.get("/pending", authenticateAdmin, classifiedController.getPendingListings);  // Admin protected, before /:id
+router.get("/", classifiedController.fetchAllListings);                            // Before /:id
+router.get("/:id", classifiedController.getListingById);                          // Dynamic route
 
 // Admin API (protected)
-router.get("/pending", authenticateAdmin, classifiedController.getPendingListings);
 router.put("/:id/approve", authenticateAdmin, classifiedController.approveListing);
 router.put("/:id/disapprove", authenticateAdmin, classifiedController.disapproveListing);
 
-// Route to update listing (allow photo uploads)
+// Update listing (allow photo uploads)
 router.put(
   "/:id",
   upload.fields([{ name: "photos", maxCount: 5 }]),
   classifiedController.updateListing
 );
 
-router.delete("/:id", classifiedController.deleteListing);            // Route to delete listing by id
-
+// Delete listing by id
+router.delete("/:id", classifiedController.deleteListing);
 
 module.exports = router;
-
