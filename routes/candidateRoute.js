@@ -10,8 +10,9 @@ const {
 router.post(
   "/",
   upload.fields([
-    { name: 'profilePhoto', maxCount: 1 },
-    { name: 'additionalPhotos', maxCount: 5 }
+    { name: "profilePhoto", maxCount: 1 },
+    { name: "image_path", maxCount: 1 },
+    { name: "additionalPhotos", maxCount: 5 },
   ]),
   validateCandidate,
   candidateController.createCandidate
@@ -23,8 +24,9 @@ router.post("/:id/connect", candidateController.sendConnectionRequest);
 router.put(
   "/:id",
   upload.fields([
-    { name: 'profilePhoto', maxCount: 1 },
-    { name: 'additionalPhotos', maxCount: 5 }
+    { name: "profilePhoto", maxCount: 1 },
+    { name: "image_path", maxCount: 1 },
+    { name: "additionalPhotos", maxCount: 5 },
   ]),
   validateCandidateUpdate,
   candidateController.updateCandidate
