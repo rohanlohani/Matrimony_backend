@@ -2,13 +2,16 @@ const express = require("express");
 const router = express.Router();
 const classifiedController = require("../controllers/classifiedController");
 const upload = require("../middlewares/uploadMiddleware");
-const { validateClassified, validateClassifiedUpdate } = require("../middlewares/classifiedValidation");
+const {
+  validateClassified,
+  validateClassifiedUpdate,
+} = require("../middlewares/classifiedValidation");
 const authenticateAdmin = require("../middlewares/authenticateAdmin");
 
 // User API
 router.post(
   "/register",
-  upload.fields([{ name: 'photos', maxCount: 5 }]),
+  upload.fields([{ name: "photos", maxCount: 5 }]),
   validateClassified,
   classifiedController.registerListing
 );
@@ -17,11 +20,21 @@ router.get("/search", classifiedController.searchListings);
 router.get("/:id", classifiedController.getListingById);
 
 // Admin API (protected)
-router.get("/pending", authenticateAdmin, classifiedController.getPendingListings);
-router.put("/:id/approve", authenticateAdmin, classifiedController.approveListing);
-router.put("/:id/disapprove", authenticateAdmin, classifiedController.disapproveListing);
-
-module.exports = router;
+router.get(
+  "/pending",
+  authenticateAdmin,
+  classifiedController.getPendingListings
+);
+router.put(
+  "/:id/approve",
+  authenticateAdmin,
+  classifiedController.approveListing
+);
+router.put(
+  "/:id/disapprove",
+  authenticateAdmin,
+  classifiedController.disapproveListing
+);
 
 // Route to update listing (allow photo uploads)
 router.put(
@@ -34,4 +47,6 @@ router.put(
 router.delete("/:id", classifiedController.deleteListing);
 
 // Route to fetch all listings
-router.get("/all", classifiedController.fetchAllListings);
+router.get("/", classifiedController.fetchAllListings);
+
+module.exports = router;

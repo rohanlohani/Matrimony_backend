@@ -5,7 +5,7 @@ const { Op } = require("sequelize");
 const serializePhotos = (files) => {
   if (!files) return null;
   // Assume photos uploaded under 'photos' field
-  const filenames = files.photos ? files.photos.map(f => f.filename) : [];
+  const filenames = files.photos ? files.photos.map((f) => f.filename) : [];
   return filenames.join(",");
 };
 
@@ -25,7 +25,9 @@ exports.registerListing = async (req, res) => {
       where: { [Op.or]: [{ email: data.email }, { phone: data.phone }] },
     });
     if (existing) {
-      return res.status(400).json({ error: "Email or Phone already registered" });
+      return res
+        .status(400)
+        .json({ error: "Email or Phone already registered" });
     }
 
     const listing = await Classified.create(data);
@@ -83,13 +85,19 @@ exports.approveListing = async (req, res) => {
     const { id } = req.params;
     const adminId = req.user.id; // assuming authenticated admin user id in req.user
 
-    const [updated] = await Classified.update({
-      status: "approved",
-      approval_by: adminId,
-      approval_date: new Date(),
-    }, { where: { id, status: "pending" } });
+    const [updated] = await Classified.update(
+      {
+        status: "approved",
+        approval_by: adminId,
+        approval_date: new Date(),
+      },
+      { where: { id, status: "pending" } }
+    );
 
-    if (!updated) return res.status(404).json({ error: "Listing not found or not pending" });
+    if (!updated)
+      return res
+        .status(404)
+        .json({ error: "Listing not found or not pending" });
     res.json({ message: "Listing approved" });
   } catch (err) {
     res.status(500).json({ error: "Failed to approve listing" });
@@ -102,13 +110,19 @@ exports.disapproveListing = async (req, res) => {
     const { id } = req.params;
     const adminId = req.user.id;
 
-    const [updated] = await Classified.update({
-      status: "disapproved",
-      approval_by: adminId,
-      approval_date: new Date(),
-    }, { where: { id, status: "pending" } });
+    const [updated] = await Classified.update(
+      {
+        status: "disapproved",
+        approval_by: adminId,
+        approval_date: new Date(),
+      },
+      { where: { id, status: "pending" } }
+    );
 
-    if (!updated) return res.status(404).json({ error: "Listing not found or not pending" });
+    if (!updated)
+      return res
+        .status(404)
+        .json({ error: "Listing not found or not pending" });
     res.json({ message: "Listing disapproved" });
   } catch (err) {
     res.status(500).json({ error: "Failed to disapprove listing" });
@@ -126,22 +140,70 @@ exports.getPendingListings = async (req, res) => {
 };
 
 // Update a listing by ID
+// Update a listing by ID
 exports.updateListing = async (req, res) => {
   try {
     const { id } = req.params;
-    const data = req.body;
+    let data = req.body;
 
-    // Optionally handle photos update (serialize if files uploaded)
-    if (req.files && req.files.photos) {
-      const filenames = req.files.photos.map(f => f.filename);
-      data.photos = filenames.join(",");
+    // Parse deletedPhotos if it's sent as JSON string
+    let deletedPhotos = [];
+    if (data.deletedPhotos) {
+      try {
+        deletedPhotos = JSON.parse(data.deletedPhotos);
+      } catch (err) {
+        console.error("Failed to parse deletedPhotos:", err);
+      }
     }
 
-    const [updated] = await Classified.update(data, { where: { id } });
-    if (!updated) return res.status(404).json({ error: "Listing not found" });
+    // Check if the listing exists first
+    const listing = await Classified.findByPk(id);
+    if (!listing) {
+      return res.status(404).json({ error: "Listing not found" });
+    }
 
+    // Get existing photos (array)
+    let existingPhotos = listing.photos ? listing.photos.split(",") : [];
+
+    // Step 1: Remove deleted photos from existingPhotos array
+    if (deletedPhotos.length > 0) {
+      existingPhotos = existingPhotos.filter(
+        (photo) => !deletedPhotos.includes(photo)
+      );
+    }
+
+    // Step 2: Add newly uploaded photos (if any)
+    if (req.files && req.files.photos) {
+      const newPhotos = req.files.photos.map((f) => f.filename);
+      existingPhotos = [...existingPhotos, ...newPhotos];
+    }
+
+    // Step 3: Update `photos` field with merged photos
+    data.photos = existingPhotos.join(",");
+
+    // Step 4: Update the listing
+    await Classified.update(data, { where: { id } });
+
+    // Optional: Delete removed images from the filesystem
+    if (deletedPhotos.length > 0) {
+      const fs = require("fs");
+      const path = require("path");
+
+      deletedPhotos.forEach((photo) => {
+        const filePath = path.join(__dirname, "../uploads", photo);
+        fs.unlink(filePath, (err) => {
+          if (err) console.warn(`Could not delete file: ${photo}`, err);
+        });
+      });
+    }
+
+    // Fetch the latest listing
     const updatedListing = await Classified.findByPk(id);
-    res.json({ message: "Listing updated", listing: updatedListing });
+
+    res.json({
+      message: "Listing updated successfully",
+      listing: updatedListing,
+    });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Failed to update listing" });
@@ -152,6 +214,7 @@ exports.updateListing = async (req, res) => {
 exports.deleteListing = async (req, res) => {
   try {
     const { id } = req.params;
+    console.log("type::id:: ", typeof id);
     const deleted = await Classified.destroy({ where: { id } });
     if (!deleted) return res.status(404).json({ error: "Listing not found" });
 
@@ -166,9 +229,9 @@ exports.deleteListing = async (req, res) => {
 exports.fetchAllListings = async (req, res) => {
   try {
     const listings = await Classified.findAll();
+    console.log("listingggg:;: ", listings);
     res.json(listings);
   } catch (err) {
     res.status(500).json({ error: "Failed to fetch listings" });
   }
 };
-

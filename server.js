@@ -28,14 +28,14 @@ app.use("/uploads", express.static("uploads"));
 // API Routes
 app.use("/api/auth", adminRoutes);
 app.use("/api/candidates", candidateRoute);
-app.use("/api/classifieds", classifiedRoutes);  // <-- Register classified routes here
+app.use("/api/classifieds", classifiedRoutes); // <-- Register classified routes here
 
 // Health check endpoint
 app.get("/", (req, res) => {
-  res.json({ 
-    message: "Server is running!", 
+  res.json({
+    message: "Server is running!",
     timestamp: new Date().toISOString(),
-    database: "Connected"
+    database: "Connected",
   });
 });
 
