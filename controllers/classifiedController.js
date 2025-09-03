@@ -140,24 +140,66 @@ exports.getPendingListings = async (req, res) => {
 };
 
 // Update a listing by ID
+// Update a listing by ID
 exports.updateListing = async (req, res) => {
   try {
     const { id } = req.params;
-    const data = req.body;
+    let data = req.body;
+
+    // Parse deletedPhotos if it's sent as JSON string
+    let deletedPhotos = [];
+    if (data.deletedPhotos) {
+      try {
+        deletedPhotos = JSON.parse(data.deletedPhotos);
+      } catch (err) {
+        console.error("Failed to parse deletedPhotos:", err);
+      }
+    }
+
     // Check if the listing exists first
     const listing = await Classified.findByPk(id);
     if (!listing) {
       return res.status(404).json({ error: "Listing not found" });
     }
-    // Optionally handle photos update (serialize if files uploaded)
-    if (req.files && req.files.photos) {
-      const filenames = req.files.photos.map((f) => f.filename);
-      data.photos = filenames.join(",");
+
+    // Get existing photos (array)
+    let existingPhotos = listing.photos ? listing.photos.split(",") : [];
+
+    // Step 1: Remove deleted photos from existingPhotos array
+    if (deletedPhotos.length > 0) {
+      existingPhotos = existingPhotos.filter(
+        (photo) => !deletedPhotos.includes(photo)
+      );
     }
-    // Update the listing (Sequelize returns number of affected rows)
+
+    // Step 2: Add newly uploaded photos (if any)
+    if (req.files && req.files.photos) {
+      const newPhotos = req.files.photos.map((f) => f.filename);
+      existingPhotos = [...existingPhotos, ...newPhotos];
+    }
+
+    // Step 3: Update `photos` field with merged photos
+    data.photos = existingPhotos.join(",");
+
+    // Step 4: Update the listing
     await Classified.update(data, { where: { id } });
+
+    // Optional: Delete removed images from the filesystem
+    if (deletedPhotos.length > 0) {
+      const fs = require("fs");
+      const path = require("path");
+
+      deletedPhotos.forEach((photo) => {
+        const filePath = path.join(__dirname, "../uploads", photo);
+        fs.unlink(filePath, (err) => {
+          if (err) console.warn(`Could not delete file: ${photo}`, err);
+        });
+      });
+    }
+
     // Fetch the latest listing
     const updatedListing = await Classified.findByPk(id);
+
     res.json({
       message: "Listing updated successfully",
       listing: updatedListing,
@@ -172,6 +214,7 @@ exports.updateListing = async (req, res) => {
 exports.deleteListing = async (req, res) => {
   try {
     const { id } = req.params;
+    console.log("type::id:: ", typeof id);
     const deleted = await Classified.destroy({ where: { id } });
     if (!deleted) return res.status(404).json({ error: "Listing not found" });
 
@@ -186,6 +229,7 @@ exports.deleteListing = async (req, res) => {
 exports.fetchAllListings = async (req, res) => {
   try {
     const listings = await Classified.findAll();
+    console.log("listingggg:;: ", listings);
     res.json(listings);
   } catch (err) {
     res.status(500).json({ error: "Failed to fetch listings" });
