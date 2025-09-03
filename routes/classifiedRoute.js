@@ -15,11 +15,15 @@ router.post(
   validateClassified,
   classifiedController.registerListing
 );
+
 router.get("/status/:contact", classifiedController.getStatus);
 router.get("/search", classifiedController.searchListings);
-router.get("/:id", classifiedController.getListingById);
+
+router.get("/", classifiedController.fetchAllListings);                            // Before /:id
+router.get("/:id", classifiedController.getListingById);                          // Dynamic route
 
 // Admin API (protected)
+
 router.get(
   "/pending",
   authenticateAdmin,
@@ -37,16 +41,15 @@ router.put(
 );
 
 // Route to update listing (allow photo uploads)
+
 router.put(
   "/:id",
   upload.fields([{ name: "photos", maxCount: 5 }]),
   classifiedController.updateListing
 );
 
-// Route to delete listing by id
+// Delete listing by id
 router.delete("/:id", classifiedController.deleteListing);
 
-// Route to fetch all listings
-router.get("/", classifiedController.fetchAllListings);
 
 module.exports = router;
