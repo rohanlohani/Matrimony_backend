@@ -168,7 +168,7 @@ exports.sendConnectionRequest = async (req, res) => {
   try {
     const { id } = req.params;
     const { senderName, senderEmail } = req.body;
-
+    console.log("smtp: ", process.env.SMTP_HOST);
     if (!senderName || !senderEmail)
       return res
         .status(400)
@@ -188,7 +188,7 @@ exports.sendConnectionRequest = async (req, res) => {
         Number(process.env.SMTP_PORT) === 465,
       auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
     });
-
+    console.log("transporter: ", transporter);
     await transporter.sendMail({
       from: process.env.FROM_EMAIL || process.env.SMTP_USER,
       to: candidate.email,
@@ -202,6 +202,7 @@ exports.sendConnectionRequest = async (req, res) => {
 
     res.status(200).json({ message: "Connection request email sent" });
   } catch (error) {
+    console.error("Email sending error:", error);
     res.status(500).json({
       error: "Failed to send connection request email",
       details: error.message,

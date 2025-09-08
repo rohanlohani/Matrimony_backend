@@ -6,12 +6,14 @@ const emailText = (candidate) =>
   `Email: ${senderEmail}\n` +
   `${message ? `\nMessage:\n${message}\n\n` : ""}` +
   `You can reply directly to this email to contact the sender.\n\n` +
-  `Regards,\n${siteName}`;
+  `Regards,\n${process.env.SITE_NAME}`;
 
 const mailHtml = (candidate) => `
       <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #111827;">
         <h2 style="margin: 0 0 12px 0;">New connection request</h2>
-        <p>You have received a new connection request on <strong>${siteName}</strong>.</p>
+        <p>You have received a new connection request on <strong>${
+          process.env.SITE_NAME
+        }</strong>.</p>
         <div style="background:#F3F4F6; padding:12px 16px; border-radius:8px;">
           <p style="margin:4px 0;"><strong>Candidate:</strong> ${
             candidate.name
@@ -27,7 +29,9 @@ const mailHtml = (candidate) => `
           }
         </div>
         <p style="margin-top:16px;">You can reply directly to this email to contact the sender.</p>
-        <p style="margin-top:16px; color:#6B7280;">— ${siteName}</p>
+        <p style="margin-top:16px; color:#6B7280;">— ${
+          process.env.SITE_NAME
+        }</p>
       </div>
     `;
 module.exports = { emailText, mailHtml };
