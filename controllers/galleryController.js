@@ -33,21 +33,31 @@ const getAlbumById = async (req, res) => {
   }
 };
 
-// Create new album
 const createAlbum = async (req, res) => {
   try {
-    const { album_title, album_description, cover_image_url, event_date } =
-      req.body;
-    const album = await GalleryAlbums.create({
+    // ✅ If a file was uploaded, multer puts its info in req.file
+    const coverImageUrl = req.file ? `/uploads/${req.file.filename}` : null;
+
+    const { album_title, album_description, event_date } = req.body;
+
+    if (!album_title || !album_description || !event_date) {
+      return res.status(400).json({ message: "All fields are required" });
+    }
+
+    const newAlbum = await GalleryAlbums.create({
       album_title,
       album_description,
-      cover_image_url,
+      cover_image_url: coverImageUrl,
       event_date,
     });
-    res.status(201).json(album);
+
+    res.status(201).json({
+      message: "Album created successfully",
+      album: newAlbum,
+    });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Failed to create album" });
+    console.error("Error creating album:", error);
+    res.status(500).json({ message: "Failed to create album", error });
   }
 };
 

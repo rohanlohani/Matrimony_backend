@@ -15,7 +15,7 @@ const {
 // --- Album Routes ---
 router.get("/albums", getAlbums); // Get all albums
 router.get("/albums/:id", getAlbumById); // Get album by ID
-router.post("/albums", createAlbum); // Create new album
+router.post("/albums", upload.single("cover_image"), createAlbum); // Create new album
 router.put("/albums/:id", updateAlbum); // Update album
 router.delete("/albums/:id", deleteAlbum); // Delete album
 
