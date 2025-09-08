@@ -62,25 +62,48 @@ const createAlbum = async (req, res) => {
 };
 
 // Update album
+
 const updateAlbum = async (req, res) => {
   try {
-    const album = await GalleryAlbums.findByPk(req.params.id);
-    if (!album) return res.status(404).json({ message: "Album not found" });
+    const albumId = req.params.id;
+    const album = await GalleryAlbums.findByPk(albumId);
 
-    const { album_title, album_description, cover_image_url, event_date } =
-      req.body;
+    if (!album) {
+      return res.status(404).json({ message: "Album not found" });
+    }
 
-    await album.update({
-      album_title,
-      album_description,
-      cover_image_url,
-      event_date,
-    });
+    // Safely extract fields from req.body
+    const { album_title, album_description, event_date } = req.body;
 
-    res.json(album);
+    // Prepare updated fields
+    const updatedFields = {
+      album_title: album_title ?? album.album_title,
+      album_description: album_description ?? album.album_description,
+      event_date: event_date ?? album.event_date,
+    };
+
+    // If a new file is uploaded, replace old cover image
+    if (req.file) {
+      // Optional: delete old image from disk
+      if (album.cover_image_url) {
+        const oldPath = path.join(
+          __dirname,
+          "..",
+          "uploads",
+          path.basename(album.cover_image_url)
+        );
+        if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
+      }
+
+      updatedFields.cover_image_url = `/uploads/${req.file.filename}`;
+    }
+
+    await album.update(updatedFields);
+
+    return res.json({ message: "Album updated successfully", album });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Failed to update album" });
+    console.error("Error updating album:", error);
+    return res.status(500).json({ message: "Failed to update album" });
   }
 };
 
