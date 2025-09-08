@@ -10,6 +10,7 @@ const {
   deleteAlbum,
   addImagesToAlbum,
   deleteImage,
+  getAlbumImages,
 } = require("../controllers/galleryController");
 
 // --- Album Routes ---
@@ -25,6 +26,7 @@ router.post(
   upload.array("images", 10), // accept multiple images, max 10
   addImagesToAlbum
 );
+router.get("/albums/:id/images", getAlbumImages);
 
 router.delete("/images/:id", deleteImage); // Delete single image
 

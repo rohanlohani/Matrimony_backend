@@ -144,6 +144,25 @@ const deleteImage = async (req, res) => {
   }
 };
 
+const getAlbumImages = async (req, res) => {
+  try {
+    const images = await GalleryImages.findAll({
+      where: { album_id: req.params.id },
+    });
+
+    if (!images || images.length === 0) {
+      return res
+        .status(404)
+        .json({ message: "No images found for this album" });
+    }
+
+    res.json(images);
+  } catch (error) {
+    console.error("Error fetching images:", error);
+    res.status(500).json({ message: "Failed to fetch images" });
+  }
+};
+
 module.exports = {
   getAlbums,
   getAlbumById,
@@ -152,4 +171,5 @@ module.exports = {
   deleteAlbum,
   addImagesToAlbum,
   deleteImage,
+  getAlbumImages,
 };
