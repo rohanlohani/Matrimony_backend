@@ -37,7 +37,7 @@ module.exports = {
         excerpt: req.body.excerpt || null,
         content: req.body.content || null,
         category_id: req.body.category_id || null,
-        thumbnail: req.file ? req.file.filename : null,
+        thumbnail_url: req.file ? req.file.filename : null,
       };
 
       // Validate required fields
@@ -47,7 +47,7 @@ module.exports = {
           .json({ error: "Title and author name are required" });
       }
 
-      if (!postData.thumbnail) {
+      if (!postData.thumbnail_url) {
         return res.status(400).json({ error: "Thumbnail image is required" });
       }
 
@@ -68,7 +68,7 @@ module.exports = {
         message: "Blog post created successfully",
         post: {
           ...newPost.toJSON(),
-          thumbnail: `/uploads/${newPost.thumbnail}`, // prepend uploads path
+          thumbnail: `/uploads/${newPost.thumbnail_url}`, // prepend uploads path
         },
       });
     } catch (error) {
@@ -91,7 +91,7 @@ module.exports = {
         excerpt: req.body.excerpt ?? post.excerpt,
         content: req.body.content ?? post.content,
         category_id: req.body.category_id || post.category_id,
-        thumbnail: req.file ? req.file.filename : post.thumbnail, // use new file if uploaded
+        thumbnail_url: req.file ? req.file.filename : post.thumbnail_url, // use new file if uploaded
       };
 
       await post.update(updatedData);
@@ -100,7 +100,7 @@ module.exports = {
         message: "Post updated successfully",
         post: {
           ...post.toJSON(),
-          thumbnail: `/uploads/${updatedData.thumbnail}`,
+          thumbnail: `/uploads/${updatedData.thumbnail_url}`,
         },
       });
     } catch (error) {

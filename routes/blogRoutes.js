@@ -15,8 +15,12 @@ router.delete("/category/:id", categoryController.deleteCategory);
 // Blog Post Routes
 router.get("/", blogPostController.getAllPosts);
 router.get("/:id", blogPostController.getPostById);
-router.post("/", upload.single("thumbnail"), blogPostController.createPost);
-router.patch("/:id", upload.single("thumbnail"), blogPostController.updatePost);
+router.post("/", upload.single("thumbnail_url"), blogPostController.createPost);
+router.patch(
+  "/:id",
+  upload.single("thumbnail_url"),
+  blogPostController.updatePost
+);
 router.delete("/:id", blogPostController.deletePost);
 
 module.exports = router;
