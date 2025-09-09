@@ -1,6 +1,6 @@
 // controllers/blogPostController.js
 const BlogPost = require("../models/blogPostModel");
-const Category = require("../models/blogCategoryModel");
+const Category = require("../models/blogCategoryModel.js");
 
 module.exports = {
   // Get all blog posts (with category included)
@@ -29,12 +29,30 @@ module.exports = {
 
   // Create a new blog post
   async createPost(req, res) {
+    console.log("Incoming Body:", req.body);
     try {
-      const { author_name, title } = req.body;
+      const postData = {
+        title: req.body.title,
+        author_name: req.body.author_name,
+        excerpt: req.body.excerpt || null,
+        content: req.body.content || null,
+        category_id: req.body.category_id || null,
+        thumbnail: req.file ? req.file.filename : null,
+      };
 
-      // Check if post with same author_name and title exists
+      // Validate required fields
+      if (!postData.title || !postData.author_name) {
+        return res
+          .status(400)
+          .json({ error: "Title and author name are required" });
+      }
+
+      if (!postData.thumbnail) {
+        return res.status(400).json({ error: "Thumbnail image is required" });
+      }
+
       const existing = await BlogPost.findOne({
-        where: { author_name, title },
+        where: { author_name: postData.author_name, title: postData.title },
       });
 
       if (existing) {
@@ -43,22 +61,50 @@ module.exports = {
           .json({ error: "Post with this author and title already exists" });
       }
 
-      const newPost = await BlogPost.create(req.body);
-      res.status(201).json({ success: true, data: newPost });
+      // Save new post
+      const newPost = await BlogPost.create(postData);
+
+      res.status(201).json({
+        message: "Blog post created successfully",
+        post: {
+          ...newPost.toJSON(),
+          thumbnail: `/uploads/${newPost.thumbnail}`, // prepend uploads path
+        },
+      });
     } catch (error) {
-      console.error(error);
-      res.status(500).json({ message: "Error creating post" });
+      console.error("Error creating post:", error);
+      res.status(500).json({ error: "Failed to create post" });
     }
   },
   // ✅ PATCH: Partially update a blog post
   async updatePost(req, res) {
     try {
       const post = await BlogPost.findByPk(req.params.id);
-      if (!post) return res.status(404).json({ message: "Post not found" });
+      if (!post) {
+        return res.status(404).json({ message: "Post not found" });
+      }
 
-      await post.update(req.body); // only updates provided fields
-      res.status(200).json(post);
+      // Build updated data dynamically
+      const updatedData = {
+        title: req.body.title || post.title,
+        author_name: req.body.author_name || post.author_name,
+        excerpt: req.body.excerpt ?? post.excerpt,
+        content: req.body.content ?? post.content,
+        category_id: req.body.category_id || post.category_id,
+        thumbnail: req.file ? req.file.filename : post.thumbnail, // use new file if uploaded
+      };
+
+      await post.update(updatedData);
+
+      res.status(200).json({
+        message: "Post updated successfully",
+        post: {
+          ...post.toJSON(),
+          thumbnail: `/uploads/${updatedData.thumbnail}`,
+        },
+      });
     } catch (error) {
+      console.error("Error updating post:", error);
       res.status(500).json({ message: "Error updating post", error });
     }
   },

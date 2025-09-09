@@ -1,5 +1,5 @@
 // controllers/categoryController.js
-const Category = require("../models/blogCategoryModel");
+const Category = require("../models/blogCategoryModel.js");
 
 module.exports = {
   // Get all categories

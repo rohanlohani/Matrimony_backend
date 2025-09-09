@@ -1,7 +1,7 @@
 // models/blogPostModel.js
 const { DataTypes } = require("sequelize");
 const { sequelize } = require("../config/db");
-const Category = require("./blogCategoryModel");
+const Category = require("./blogCategoryModel.js");
 
 const BlogPost = sequelize.define(
   "BlogPost",
@@ -22,6 +22,7 @@ const BlogPost = sequelize.define(
     publish_date: {
       type: DataTypes.DATE,
       allowNull: false,
+      defaultValue: DataTypes.NOW,
     },
     category_id: {
       type: DataTypes.INTEGER,
