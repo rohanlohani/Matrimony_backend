@@ -11,6 +11,7 @@ const candidateRoute = require("./routes/candidateRoute");
 const classifiedRoutes = require("./routes/classifiedRoute");
 const homePageSliderRoutes = require("./routes/homePageSliderRoutes");
 const galleryRoutes = require("./routes/galleryRoutes");
+const blogRoutes = require("./routes/blogRoutes");
 
 const app = express();
 
@@ -32,6 +33,7 @@ app.use("/api/auth", adminRoutes);
 app.use("/api/candidates", candidateRoute);
 app.use("/api/classifieds", classifiedRoutes);
 app.use("/api/sliders", homePageSliderRoutes);
+app.use("/api/blogs", blogRoutes);
 app.use("/api", galleryRoutes);
 
 // Health check endpoint
